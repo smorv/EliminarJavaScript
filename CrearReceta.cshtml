@@ -1,0 +1,256 @@
+﻿@model CocinaOnline.Models.RecetaViewModel
+<script src="//cdn.ckeditor.com/4.6.1/basic/ckeditor.js"></script>
+@*<script src="~/Content/ckeditor/ckeditor.js"></script>*@
+<script src="~/Content/ckeditor/adapters/jquery.js"></script>
+<!-- multistep form -->
+@{
+    
+}
+<form id="msform">
+        <h2 class="fs-title">Crea tu Receta</h2>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <label id="errorTitulo"></label>
+                @Html.EditorFor(model => model.Recetas.Titulo, new { htmlAttributes = new { @class = "form-control", @placeholder = "Título receta", ID = "Titulo" } })
+            </div>
+            <hr />
+            <br />
+            <div class="row">
+                @Html.DropDownList("usuario_id", null, htmlAttributes: new { @class = "form-control", ID = "Usuario" })
+            </div>
+        </div>      
+    </div>
+    <br />
+    <div class="row">
+        @Html.TextAreaFor(model => model.Recetas.Preparacion, new { htmlAttributes = new { @class = "form-control", ID = "editor1" } })
+        <script type='text/javascript'>
+            $(function () {
+                editor = CKEDITOR.replace('Recetas.Preparacion');
+            });
+        </script>       
+    </div>
+    <hr />
+    <div class="row">
+        <h2 class="fs-title">Ingredientes</h2>
+        <h3 class="fs-subtitle"></h3>
+        <div class="row">
+            <div class="col-md-5">
+                @Html.DropDownList("ingrediente_id", null, htmlAttributes: new { @class = "form-control", ID = "Ingrediente" })
+            </div>    
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-md-5">
+                <label id="errorCantidad"></label>
+                @Html.EditorFor(model => model.IngredienteReceta.Cantidad, new { htmlAttributes = new { @class = "form-control", @placeholder = "Cantidad", ID = "Cantidad" } })
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-md-5">
+                @Html.EditorFor(model => model.IngredienteReceta.UnidadMedida, new { htmlAttributes = new { @class = "form-control", @placeholder = "Unidad de Medida", ID = "Umedida" } })
+            </div> 
+        </div>
+        <div class="row">
+            <div class="col-md-5"></div>
+            <div class="col-md-3">
+                <span class="add btn btn-success btn-block btn-lg glyphicon glyphicon-plus-sign"></span>
+            </div>
+        </div>
+        <br />
+        <div id="contenedoringredientes">
+        </div>
+    </div> 
+    <br />
+    <br />
+    <div class="row">
+        <span class="submit btn btn-info btn-block btn-lg glyphicon glyphicon-save" value="Guardar">Guardar</span>
+    </div>  
+</form>
+
+<script>   
+    var editor = "";
+    var value = "";
+    var ListaIngredientes = [];
+
+    $(document).on('click', '.submit', function () {
+        var cantidadOK = validarCantidad();
+        console.log(cantidadOK);
+        if (cantidadOK) {
+            llamarJSON();
+        }
+    });  
+    $(document).on('click', '.add', function () {
+        $('#contenedor').html("");
+        var resultado="";
+        var cantidadOK = validarCantidad();
+        if (cantidadOK)
+        {
+            ingrediente();
+            console.log(ListaIngredientes);
+            resultado =
+                    "<table class='table'>"
+                   + "<thead class='thead-inverse'>"
+                   + "<th>"
+                   + "INGREDIENTE"
+                   + "</th>"
+                   + "<th>"
+                   + "CANTIDAD"
+                   + "</th>"
+                   + "<th>"
+                   + "MEDIDA"
+                   + "</th>"
+                   + "<th>"
+                   + "</th>"
+            + "<tbody>";
+            ListaIngredientes.forEach(function (item, index, array) {
+                console.log(Object);
+                resultado += "<tr>"
+                    + "<td>" + item.id + "</td>"
+                    + "<td>" + item.Cantidad + "</td>"
+                    + "<td>" + item.UnidadMedida + "</td>"
+                    + "<td><span class='btn btn-danger eliminar glyphicon glyphicon-remove-circle' id_delete=" + index + "></span></td>"
+                    + "</tr>"
+            });
+            + "</table>"
+            + "<tbody>";
+            $('#contenedoringredientes').html(resultado);
+        }
+        return cantidadOK;
+    });
+    $(document).on('click', '.eliminar', function () {
+        //$('#contenedoringredientes').html("");
+        var resultado = "";
+        var id = $(this).attr('id_delete');
+        console.log(id);
+        delete ListaIngredientes[id];
+        console.log(ListaIngredientes);
+        resultado =
+               "<table class='table'>"
+               + "<thead class='thead-inverse'>"
+               + "<th>"
+               + "INGREDIENTE"
+               + "</th>"
+               + "<th>"
+               + "CANTIDAD"
+               + "</th>"
+               + "<th>"
+               + "MEDIDA"
+               + "</th>"
+               + "<th>"
+               + "</th>"
+             + "<tbody>";
+            ListaIngredientes.forEach(function (item, index, array) {
+                console.log(Object);
+                resultado += "<tr>"
+                    + "<td>" + item.id + "</td>"
+                    + "<td>" + item.Cantidad + "</td>"
+                    + "<td>" + item.UnidadMedida + "</td>"
+                    + "<td><span class='btn btn-danger eliminar glyphicon glyphicon-remove-circle' id_delete=" + index + "></span></td>"
+                    + "</tr>"
+                    
+            });
+            + "</table>"
+            + "<tbody>";
+            $('#contenedoringredientes').html(resultado);
+    });
+
+    function ingrediente()
+    {
+        var ingrediente = {};
+        ingrediente["Cantidad"] = $('#Cantidad').val();
+        ingrediente["UnidadMedida"] = $('#Umedida').val();
+        ingrediente["id"] = $('#Ingrediente').val();
+        ListaIngredientes.push(ingrediente);
+        return JSON.stringify(ListaIngredientes);
+    }
+    function receta() {
+       
+        var receta = {};
+        receta["Titulo"] = $('#Titulo').val();
+        receta["Preparacion"] = editor.getData();
+        receta["Cantidad"] = $('#Cantidad').val();
+        receta["usuario_id"] = $('#Usuario').val();
+        receta["UnidadMedida"] = $('#Umedida').val();
+        receta["ingrediente_id"] = $('#Ingrediente').val();
+        receta["Lista"] = ListaIngredientes;
+        console.log(receta);
+        return JSON.stringify(receta);
+    }
+    function llamarJSON() {
+        var recetaJSON = receta();
+        $.ajax({
+            type: "POST",
+            traditional: true,
+            async: false,
+            cache: false,
+            url: '/recetas/JsonReceta',
+            context: document.body,
+            data: { "recetas": recetaJSON },
+            success: function (json) {
+                console.log(json);
+                if (json.isRedirect) {
+                    window.location.href = json.redirectUrl;
+                }
+            },
+            error: function (xhr) {
+                //debugger;
+                console.log(xhr.responseText);
+                alert("Error has occurred..");
+            }
+        });
+    }
+    //VALIDACIONES DE CAMPOS
+    function validarTitulo() {
+        var titulo = $('#Titulo').val();
+        $('#errorTitulo').html("");
+        var validadoTitulo = true;
+        if (titulo== "") {
+            validadoTitulo = false;
+        }
+        if (titulo.length < 3) {
+            validadoTitulo = false;
+        }
+        if (!isNaN(titulo)) {
+            validadoTitulo = false;
+        }
+        if (!validadoTitulo) {
+            $('#errorTitulo').html("ERROR: Titulo debe ser alfabético y mayor a t");
+        }
+        return validadoTitulo;
+    }
+    function validarTitulo() {
+        var titulo = $('#Titulo').val();
+        $('#errorTitulo').html("");
+        var validadoTitulo = true;
+        if (titulo == "") {
+            validadoTitulo = false;
+        }
+        if (titulo.length < 3) {
+            validadoTitulo = false;
+        }
+        if (!isNaN(titulo)) {
+            validadoTitulo = false;
+        }
+        if (!validadoTitulo) {
+            $('#errorTitulo').html("ERROR: Titulo debe ser alfabético y mayor a t");
+        }
+        return validadoTitulo;
+    }
+    function validarCantidad() {
+        var cantidad = $('#Cantidad').val();
+        $('#errorCantidad').html("");
+        var validadoCantidad = true;
+        if (cantidad = "") {
+            validadoCantidad = false;
+        }
+        if (isNaN(cantidad)) {
+            validadoCantidad = false;
+        }
+        if (!validadoCantidad) {
+            $('#errorCantidad').html("ERROR: Cantidad debe ser un valor numérico entero");
+        }
+        return validadoCantidad;
+    }   
+</script>
